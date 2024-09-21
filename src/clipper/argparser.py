@@ -499,7 +499,7 @@ def getArgParser(clipper_paths: ClipperPaths) -> argparse.ArgumentParser:
         "-vc",
         dest="videoCodec",
         default="vp9",
-        choices=["vp9", "vp8", "h264"],
+        choices=["vp9", "vp8", "h264", "h264_nvenc"],
         help=" ".join(
             [
                 "Select a video codec for video encoding."
@@ -507,6 +507,8 @@ def getArgParser(clipper_paths: ClipperPaths) -> argparse.ArgumentParser:
                 "vp9 is the default and most tested video codec with yt_clipper.",
                 "vp9 generally offers a better quality-size trade-off than vp8.",
                 "h264 was added more recently and is not as well tested as vp9.",
+                "h264_nvenc was added even more recently. It additionally has caveats with ffmpeg filters and quality.",
+                "See https://github.com/exwm/yt_clipper/issues/46#issuecomment-2364959110 for details." ,
             ],
         ),
     )

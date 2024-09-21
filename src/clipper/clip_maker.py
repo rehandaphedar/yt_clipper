@@ -63,7 +63,7 @@ def getMarkerPairSettings(  # noqa: PLR0912
             else:
                 mp["fileNameSuffix"] = mps["ext"]
         else:
-            mp["fileNameSuffix"] = "mp4" if mps["videoCodec"] == "h264" else "webm"
+            mp["fileNameSuffix"] = "mp4" if mps["videoCodec"] in ["h264", "h264_nvenc"] else "webm"
 
         mp["fileName"] = f'{mp["fileNameStem"]}.{mp["fileNameSuffix"]}'
         mp["filePath"] = f'{cp.clipsPath}/{mp["fileName"]}'
@@ -742,8 +742,8 @@ def getFfmpegVideoCodec(
             qmax=qmax,
             qmin=qmin,
         )
-    if videoCodec == "h264":
-        return getFfmpegVideoCodecH264(cbr=cbr, mp=mp, mps=mps, qmax=qmax, qmin=qmin)
+    if videoCodec in ["h264", "h264_nvenc"]:
+        return getFfmpegVideoCodecH264(videoCodec=videoCodec, cbr=cbr, mp=mp, mps=mps, qmax=qmax, qmin=qmin)
 
     raise ValueError(f"Invalid video codec: {videoCodec}")
 
@@ -789,6 +789,7 @@ def getFfmpegVideoCodecVpx(
 
 
 def getFfmpegVideoCodecH264(
+    videoCodec: str,
     cbr: Optional[int],
     mp: DictStrAny,
     mps: DictStrAny,
@@ -821,9 +822,14 @@ def getFfmpegVideoCodecH264(
     if mps["enableHDR"]:
         dynamic_range_args = hdr_args
 
+    codec_mapping = {
+      "h264": "libx264",
+      "h264_nvenc": "h264_nvenc"
+}
+
     video_codec_args = " ".join(
         (
-            f"-c:v libx264",
+            f'-c:v {codec_mapping[videoCodec]}',
             f"-movflags write_colr",
             dynamic_range_args,
             f"-aq-mode 4",
@@ -1009,7 +1015,7 @@ def mergeClips(cs: ClipperState) -> None:  # noqa: PLR0912
             inputsTxt.write(inputs)
 
         # TODO: Test merging of clips of different video codecs
-        mergedFileNameSuffix = "mp4" if settings["videoCodec"] == "h264" else "webm"
+        mergedFileNameSuffix = "mp4" if settings["videoCodec"] in ["h264", "h264_nvenc"] else "webm"
         if titlePrefixesConsistent:
             mergedFileName = (
                 f'{mergeTitlePrefix}-{settings["titleSuffix"]}-({merge}).{mergedFileNameSuffix}'
